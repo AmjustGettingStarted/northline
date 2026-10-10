@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Northline is a live news desk for tech, science, sports, and politics.">
+  <title>Northline - Live news</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%239c2f2f'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Georgia' font-size='16' fill='%23fbf8f3'%3EN%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,650&family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #efeae1;
+      --card: #fbf8f3;
+      --ink: #1a1714;
+      --muted: #4e4943;
+      --line: #ddd4c6;
+      --accent: #8d2a2a;
+      --accent-soft: rgba(141, 42, 42, 0.1);
+      --shadow: 0 1px 2px rgba(26, 23, 20, 0.05), 0 10px 28px rgba(26, 23, 20, 0.07);
+      --shadow-hover: 0 2px 4px rgba(26, 23, 20, 0.06), 0 16px 36px rgba(26, 23, 20, 0.1);
+      --serif: "Newsreader", "Iowan Old Style", Palatino, "Palatino Linotype", serif;
+      --sans: "Outfit", "Segoe UI", sans-serif;
+      --radius: 18px;
+      --header: 0px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #12110f;
+        --card: #1c1a17;
+        --ink: #f6f1ea;
+        --muted: #c4bbb2;
+        --line: #3a342c;
+        --accent: #f0b4a8;
+        --accent-soft: rgba(240, 180, 168, 0.12);
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.28);
+        --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.35), 0 18px 40px rgba(0, 0, 0, 0.38);
+      }
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        radial-gradient(1200px 420px at 10% -10%, rgba(141, 42, 42, 0.08), transparent 55%),
+        var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    a { color: inherit; }
+
+    :focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+
+    .skip {
+      position: absolute;
+      left: 16px;
+      top: -48px;
+      background: var(--ink);
+      color: var(--paper);
+      padding: 10px 14px;
+      border-radius: 8px;
+      z-index: 20;
+    }
+
+    .skip:focus { top: 12px; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: color-mix(in srgb, var(--paper) 88%, transparent);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wrap {
+      width: min(1120px, calc(100% - 32px));
+      margin-inline: auto;
+    }
+
+    .masthead {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 0 14px;
+    }
+
+    .eyebrow {
+      margin: 0 0 2px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .wordmark {
+      font-family: var(--serif);
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      line-height: 0.95;
+      text-decoration: none;
+    }
+
+    .mast-side {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 4px;
+    }
+
+    .today {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: right;
+    }
+
+    .refresh {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--card);
+      color: var(--ink);
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .refresh:hover { border-color: var(--accent); color: var(--accent); }
+
+    .refresh[disabled] { opacity: 0.6; cursor: progress; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 0 14px;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .tab:hover { background: var(--accent-soft); }
+
+    .tab[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    main {
+      flex: 1;
+      padding: 22px 0 48px;
+    }
+
+    .status {
+      min-height: 1.5em;
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--card);
+      border: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .card__media {
+      aspect-ratio: 16 / 10;
+      background: var(--line);
+      overflow: hidden;
+    }
+
+    .card__media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card__body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      padding: 18px 18px 16px;
+    }
+
+    .kicker {
+      margin: 0;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(1.35rem, 2vw, 1.65rem);
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .card h2 a {
+      text-decoration: none;
+    }
+
+    .card h2 a:hover { color: var(--accent); }
+
+    .summary {
+      margin: 0;
+      color: var(--muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card__foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px 16px;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+
+    time {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .read {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 4px;
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent);
+    }
+
+    .read svg { flex: none; }
+
+    .read:hover { color: var(--accent); }
+
+    .state {
+      display: grid;
+      place-items: center;
+      gap: 14px;
+      min-height: 42vh;
+      text-align: center;
+      padding: 24px 8px;
+    }
+
+    .state h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 1.8rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+
+    .state p {
+      margin: 0;
+      max-width: 38ch;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 3px solid var(--line);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .retry {
+      min-height: 44px;
+      padding: 0 18px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--paper);
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .retry:hover { background: var(--accent); color: #fff; }
+
+    .site-footer {
+      border-top: 1px solid var(--line);
+      padding: 18px 0 28px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .site-footer p { margin: 0; }
+
+    @media (min-width: 720px) {
+      .grid { grid-template-columns: 1fr 1fr; gap: 20px; }
+    }
+
+    @media (min-width: 1080px) {
+      .grid { grid-template-columns: 1fr 1fr 1fr; gap: 22px; }
+
+      .card--lead {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1.35fr 1fr;
+      }
+
+      .card--lead .card__media {
+        aspect-ratio: auto;
+        min-height: 320px;
+        height: 100%;
+      }
+
+      .card--lead .card__body { padding: 32px 32px 28px; justify-content: center; }
+
+      .card--lead h2 { font-size: clamp(2rem, 3vw, 2.7rem); }
+
+      .card--lead .summary {
+        -webkit-line-clamp: 5;
+        font-size: 1.05rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .masthead { align-items: flex-start; flex-direction: column; }
+      .mast-side { width: 100%; justify-content: space-between; padding-bottom: 0; }
+      .today { text-align: left; }
+      .wrap { width: min(1120px, calc(100% - 28px)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .card, .spinner { transition: none; animation: none; }
+      .card:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#stories">Skip to stories</a>
+  <header class="site-header">
+    <div class="wrap masthead">
+      <div>
+        <p class="eyebrow">Live edition</p>
+        <a class="wordmark" href="#all">Northline</a>
+      </div>
+      <div class="mast-side">
+        <p class="today" id="today"></p>
+        <button class="refresh" id="refresh" type="button">Refresh</button>
+      </div>
+    </div>
+    <div class="wrap">
+      <nav aria-label="News categories">
+        <div class="tabs" id="tabs" role="tablist">
+          <button class="tab" id="tab-all" type="button" role="tab" data-category="all" aria-controls="stories" aria-selected="true">All</button>
+          <button class="tab" id="tab-tech" type="button" role="tab" data-category="tech" aria-controls="stories" aria-selected="false" tabindex="-1">Tech</button>
+          <button class="tab" id="tab-science" type="button" role="tab" data-category="science" aria-controls="stories" aria-selected="false" tabindex="-1">Science</button>
+          <button class="tab" id="tab-sports" type="button" role="tab" data-category="sports" aria-controls="stories" aria-selected="false" tabindex="-1">Sports</button>
+          <button class="tab" id="tab-politics" type="button" role="tab" data-category="politics" aria-controls="stories" aria-selected="false" tabindex="-1">Politics</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="status" id="status" aria-live="polite"></p>
+    <section id="stories" aria-busy="false"></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>Stories from BBC News RSS feeds. Open any card to read the original article.</p>
+    </div>
+  </footer>
+
+  <script>
+    const CATEGORIES = [
+      { id: "all", label: "All", feed: "https://feeds.bbci.co.uk/news/rss.xml" },
+      { id: "tech", label: "Tech", feed: "https://feeds.bbci.co.uk/news/technology/rss.xml" },
+      { id: "science", label: "Science", feed: "https://feeds.bbci.co.uk/news/science_and_environment/rss.xml" },
+      { id: "sports", label: "Sports", feed: "https://feeds.bbci.co.uk/sport/rss.xml" },
+      { id: "politics", label: "Politics", feed: "https://feeds.bbci.co.uk/news/politics/rss.xml" }
+    ];
+
+    const CACHE_MS = 10 * 60 * 1000;
+    const statusEl = document.getElementById("status");
+    const storiesEl = document.getElementById("stories");
+    const refreshBtn = document.getElementById("refresh");
+    const tabButtons = Array.from(document.querySelectorAll(".tab"));
+
+    let currentId = "all";
+    let requestToken = 0;
+    let activeController = null;
+
+    document.getElementById("today").textContent = new Intl.DateTimeFormat("en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }).format(new Date());
+
+    function categoryFromHash() {
+      const id = location.hash.replace("#", "");
+      return CATEGORIES.some((category) => category.id === id) ? id : "all";
+    }
+
+    function categoryById(id) {
+      return CATEGORIES.find((category) => category.id === id);
+    }
+
+    function revealTab(id) {
+      const button = document.getElementById("tab-" + id);
+      if (!button) return;
+      const scroller = button.parentElement;
+      const relativeLeft = button.offsetLeft - scroller.offsetLeft;
+      const target = relativeLeft - (scroller.clientWidth - button.offsetWidth) / 2;
+      scroller.scrollLeft = Math.max(0, target);
+    }
+
+    function setTabs(id) {
+      tabButtons.forEach((button) => {
+        const selected = button.dataset.category === id;
+        button.setAttribute("aria-selected", selected ? "true" : "false");
+        button.tabIndex = selected ? 0 : -1;
+      });
+      revealTab(id);
+      requestAnimationFrame(() => revealTab(id));
+    }
+
+    function plainText(value) {
+      const doc = new DOMParser().parseFromString(value || "", "text/html");
+      return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
+    }
+
+    function safeHttpUrl(value) {
+      try {
+        const url = new URL(value);
+        if (url.protocol === "http:" || url.protocol === "https:") return url.href;
+      } catch (error) {
+        return "";
+      }
+      return "";
+    }
+
+    function sharperImage(url) {
+      return url.replace("/ace/standard/240/", "/ace/standard/800/");
+    }
+
+    function formatDate(pubDate) {
+      const isoSource = pubDate.includes("T") ? pubDate : pubDate.replace(" ", "T") + "Z";
+      const date = new Date(isoSource);
+      if (Number.isNaN(date.getTime())) {
+        return { iso: "", label: pubDate };
+      }
+      const label = new Intl.DateTimeFormat("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      }).format(date);
+      return { iso: date.toISOString(), label };
+    }
+
+    function normalizeItem(item) {
+      const link = safeHttpUrl(item.link);
+      const title = plainText(item.title);
+      if (!link || !title) return null;
+      const summary = plainText(item.description || item.content);
+      const image = sharperImage(safeHttpUrl(item.thumbnail || (item.enclosure && item.enclosure.thumbnail) || ""));
+      const date = formatDate(item.pubDate || "");
+      return {
+        title,
+        link,
+        summary: summary || "Open the original story for the full report.",
+        image,
+        dateIso: date.iso,
+        dateLabel: date.label || "Date unavailable"
+      };
+    }
+
+    function cacheKey(id) {
+      return "northline:" + id;
+    }
+
+    function readCache(id) {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem(cacheKey(id)) || "null");
+        if (!saved || Date.now() - saved.savedAt > CACHE_MS) return null;
+        return saved.items;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function writeCache(id, items) {
+      try {
+        sessionStorage.setItem(cacheKey(id), JSON.stringify({ savedAt: Date.now(), items }));
+      } catch (error) {
+        /* Ignore private-mode storage failures. */
+      }
+    }
+
+    function isLimit(status, message) {
+      return status === 429 || /limit|quota|exceed|too many|maximum number/i.test(message || "");
+    }
+
+    async function fetchStories(category, signal) {
+      const endpoint = new URL("https://api.rss2json.com/v1/api.json");
+      endpoint.searchParams.set("rss_url", category.feed);
+      const response = await fetch(endpoint, { signal });
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch (error) {
+        payload = null;
+      }
+      const message = payload && payload.message ? payload.message : "";
+      if (isLimit(response.status, message) || (payload && payload.status === "error" && isLimit(response.status, message))) {
+        const error = new Error("This free news feed has reached its request limit. Wait a little while, then try again.");
+        error.limit = true;
+        throw error;
+      }
+      if (!response.ok || !payload || payload.status !== "ok") {
+        throw new Error("The news feed could not be loaded. Check your connection and try again.");
+      }
+      return (payload.items || []).map(normalizeItem).filter(Boolean);
+    }
+
+    function showLoading(label) {
+      storiesEl.innerHTML = "";
+      storiesEl.setAttribute("aria-busy", "true");
+      statusEl.textContent = label === "All" ? "Loading stories." : "Loading " + label + " stories.";
+      const state = document.createElement("div");
+      state.className = "state";
+      state.setAttribute("role", "status");
+      const spinner = document.createElement("div");
+      spinner.className = "spinner";
+      spinner.setAttribute("aria-hidden", "true");
+      const text = document.createElement("p");
+      text.textContent = "Fetching the latest stories…";
+      state.append(spinner, text);
+      storiesEl.append(state);
+    }
+
+    function showError(error) {
+      storiesEl.innerHTML = "";
+      storiesEl.setAttribute("aria-busy", "false");
+      statusEl.textContent = "";
+      const state = document.createElement("div");
+      state.className = "state";
+      state.setAttribute("role", "alert");
+      const heading = document.createElement("h2");
+      heading.textContent = error.limit ? "Feed limit reached" : "Stories unavailable";
+      const text = document.createElement("p");
+      text.textContent = error.message;
+      const retry = document.createElement("button");
+      retry.className = "retry";
+      retry.type = "button";
+      retry.textContent = "Try again";
+      retry.addEventListener("click", () => load(currentId, { force: true }));
+      state.append(heading, text, retry);
+      storiesEl.append(state);
+    }
+
+    function renderStories(items, category) {
+      storiesEl.innerHTML = "";
+      storiesEl.setAttribute("aria-busy", "false");
+      if (!items.length) {
+        statusEl.textContent = "No " + category.label + " stories right now.";
+        const state = document.createElement("div");
+        state.className = "state";
+        const heading = document.createElement("h2");
+        heading.textContent = "Nothing on this desk";
+        const text = document.createElement("p");
+        text.textContent = "No stories came back for " + category.label + ". Try another category or refresh.";
+        state.append(heading, text);
+        storiesEl.append(state);
+        return;
+      }
+
+      statusEl.textContent = category.id === "all"
+        ? "Showing " + items.length + " stories."
+        : "Showing " + items.length + " " + category.label + " stories.";
+      const grid = document.createElement("div");
+      grid.className = "grid";
+
+      items.forEach((item, index) => {
+        const article = document.createElement("article");
+        article.className = index === 0 ? "card card--lead" : "card";
+
+        if (item.image) {
+          const media = document.createElement("div");
+          media.className = "card__media";
+          const image = document.createElement("img");
+          image.src = item.image;
+          image.alt = "";
+          image.loading = index === 0 ? "eager" : "lazy";
+          image.decoding = "async";
+          image.addEventListener("error", () => media.remove());
+          media.append(image);
+          article.append(media);
+        }
+
+        const body = document.createElement("div");
+        body.className = "card__body";
+
+        const kicker = document.createElement("p");
+        kicker.className = "kicker";
+        kicker.textContent = category.id === "all"
+          ? (index === 0 ? "Top story" : "News")
+          : category.label;
+
+        const heading = document.createElement("h2");
+        const titleLink = document.createElement("a");
+        titleLink.href = item.link;
+        titleLink.target = "_blank";
+        titleLink.rel = "noopener noreferrer";
+        titleLink.textContent = item.title;
+        heading.append(titleLink);
+
+        const summary = document.createElement("p");
+        summary.className = "summary";
+        summary.textContent = item.summary;
+
+        const foot = document.createElement("div");
+        foot.className = "card__foot";
+        const time = document.createElement("time");
+        if (item.dateIso) time.dateTime = item.dateIso;
+        time.textContent = item.dateLabel;
+
+        const read = document.createElement("a");
+        read.className = "read";
+        read.href = item.link;
+        read.target = "_blank";
+        read.rel = "noopener noreferrer";
+        read.setAttribute("aria-label", "Read full article: " + item.title);
+        read.append(document.createTextNode("Read Full Article"));
+        const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        icon.setAttribute("viewBox", "0 0 24 24");
+        icon.setAttribute("width", "16");
+        icon.setAttribute("height", "16");
+        icon.setAttribute("aria-hidden", "true");
+        icon.setAttribute("fill", "none");
+        icon.setAttribute("stroke", "currentColor");
+        icon.setAttribute("stroke-width", "2");
+        icon.setAttribute("stroke-linecap", "round");
+        icon.setAttribute("stroke-linejoin", "round");
+        const iconPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        iconPath.setAttribute("d", "M7 17 17 7M9 7h8v8");
+        icon.append(iconPath);
+        read.append(icon);
+
+        foot.append(time, read);
+        body.append(kicker, heading, summary, foot);
+        article.append(body);
+        grid.append(article);
+      });
+
+      storiesEl.append(grid);
+    }
+
+    async function load(id, options) {
+      const force = options && options.force;
+      const category = categoryById(id) || categoryById("all");
+      currentId = category.id;
+      setTabs(category.id);
+      document.title = category.label + " | Northline";
+
+      if (!force) {
+        const cached = readCache(category.id);
+        if (cached) {
+          renderStories(cached, category);
+          return;
+        }
+      } else {
+        sessionStorage.removeItem(cacheKey(category.id));
+      }
+
+      const token = ++requestToken;
+      activeController?.abort();
+      const controller = new AbortController();
+      activeController = controller;
+      const timedOut = { value: false };
+      const timer = setTimeout(() => {
+        timedOut.value = true;
+        controller.abort();
+      }, 15000);
+
+      refreshBtn.disabled = true;
+      showLoading(category.label);
+
+      try {
+        const items = await fetchStories(category, controller.signal);
+        if (token !== requestToken) return;
+        writeCache(category.id, items);
+        renderStories(items, category);
+      } catch (error) {
+        if (token !== requestToken) return;
+        if (error.name === "AbortError" && !timedOut.value) return;
+        const friendly = new Error(
+          timedOut.value
+            ? "The news feed took too long to respond. Try again."
+            : error.message || "The news feed could not be loaded. Check your connection and try again."
+        );
+        friendly.limit = Boolean(error.limit);
+        showError(friendly);
+      } finally {
+        clearTimeout(timer);
+        if (token === requestToken) refreshBtn.disabled = false;
+      }
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const id = button.dataset.category;
+        if (location.hash === "#" + id) {
+          load(id);
+          return;
+        }
+        location.hash = id;
+      });
+    });
+
+    document.getElementById("tabs").addEventListener("keydown", (event) => {
+      const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
+      if (!keys.includes(event.key)) return;
+      event.preventDefault();
+      const index = CATEGORIES.findIndex((category) => category.id === currentId);
+      let next = index;
+      if (event.key === "ArrowRight") next = (index + 1) % CATEGORIES.length;
+      if (event.key === "ArrowLeft") next = (index - 1 + CATEGORIES.length) % CATEGORIES.length;
+      if (event.key === "Home") next = 0;
+      if (event.key === "End") next = CATEGORIES.length - 1;
+      const id = CATEGORIES[next].id;
+      document.getElementById("tab-" + id).focus();
+      location.hash = id;
+    });
+
+    refreshBtn.addEventListener("click", () => load(currentId, { force: true }));
+
+    window.addEventListener("hashchange", () => load(categoryFromHash()));
+
+    if (!location.hash) history.replaceState(null, "", "#all");
+    load(categoryFromHash());
+    document.fonts.ready.then(() => revealTab(currentId));
+    window.addEventListener("resize", () => revealTab(currentId));
+  </script>
+</body>
+</html>
